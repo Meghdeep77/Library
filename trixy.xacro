@@ -1,0 +1,384 @@
+<?xml version='1.0'?>
+
+<robot name="trixy" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find trixy)/urdf/trixy.gazebo" />
+  
+  <gazebo reference="left_wheel">
+    <material>Gazebo/Green</material>
+  </gazebo>
+
+  <gazebo reference="right_wheel">
+    <material>Gazebo/Green</material>
+  </gazebo>
+   <gazebo reference="right_wheel_2">
+    <material>Gazebo/Green</material>
+  </gazebo>
+  <gazebo reference="left_wheel_2">
+    <material>Gazebo/Green</material>
+  </gazebo>
+
+
+
+  <gazebo reference="camera">
+    <material>Gazebo/Red</material>
+  </gazebo>
+
+  <gazebo reference="chassis">
+    <material>Gazebo/Blue</material>
+  </gazebo>
+
+  <gazebo reference="gps_link">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+  <link name="robot_footprint"></link>
+
+  <joint name="robot_footprint_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="robot_footprint"/>
+    <child link="chassis" />
+  </joint>
+
+  <joint name="camera_joint" type="fixed">
+    <origin xyz="0.22 0 0.1" rpy="0 0 0" />
+    <parent link="chassis"/>
+    <child link="camera" />  
+    <axis xyz="0 1 0"/> 
+  </joint>
+
+  <joint name="imu_joint" type="fixed">
+    <origin xyz="0 0 0.05" rpy="0 0 0" />
+    <parent link="chassis"/>
+    <child link="imu_link" />  
+    <axis xyz="0 1 0"/> 
+  </joint>
+
+  <joint name="GPS_joint" type="fixed">
+    <origin xyz="0 0 0.005" rpy="0 0 0" />
+    <parent link="chassis"/>
+    <child link="gps_link" />  
+    <axis xyz="0 1 0"/> 
+  </joint>
+
+  <joint name="left_camera_frame" type="fixed">
+    <origin xyz="0 0.10 0.13" rpy="0 0 0" />
+    <parent link="chassis"/>
+    <child link="left_camera_frame" />  
+    <axis xyz="0 1 0"/> 
+  </joint>
+
+  <joint name="hokuyo_joint" type="fixed">
+    <origin xyz="0.2 0.1 0.1" rpy="0 0 0" />
+    <parent link="chassis"/>
+    <child link="hokuyo" />  
+    <axis xyz="0 1 0"/> 
+  </joint>
+
+  <joint type="continuous" name="left_wheel_hinge">
+    <origin xyz="-0.1 0.30 0" rpy="0 0 0" />
+    <parent link="chassis"/>
+    <child link="left_wheel" />
+    <axis xyz="0 1 0" rpy="0 0 0" />
+    <limit effort="10000" velocity="1000" />
+    <dynamics damping="1.0" friction="1.0" />
+  </joint>
+
+  <joint type="continuous" name="right_wheel_hinge">
+    <origin xyz="0.12 -0.30 0" rpy="0 0 0" /> 
+    <parent link="chassis"/>
+    <child link="right_wheel" />
+    <axis xyz="0 1 0" rpy="0 0 0" />
+    <limit effort="10000" velocity="1000" />
+    <dynamics damping="1.0" friction="1.0" />
+
+  </joint>
+  <joint type="continuous" name="right_wheel_hinge_2">
+  <origin xyz="-0.1 -0.30 0" rpy="0 0 0" />
+  <parent link="chassis"/>
+  <child link="right_wheel_2" />
+  <axis xyz="0 1 0" rpy="0 0 0" />
+  <limit effort="10000" velocity="1000" />
+  <dynamics damping="1.0" friction="1.0" />
+</joint>
+
+
+<joint type="continuous" name="left_wheel_hinge_2">
+  <origin xyz="0.12 0.30 0" rpy="0 0 0" />
+  <parent link="chassis"/>
+  <child link="left_wheel_2" />
+  <axis xyz="0 1 0" rpy="0 0 0" />
+  <limit effort="10000" velocity="1000" />
+  <dynamics damping="1.0" friction="1.0" />
+</joint>
+
+
+
+
+<link name="camera">
+    <inertial>
+      <mass value="0.1"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia
+        ixx="1e-6" ixy="0.0" ixz="0.0"
+        iyy="1e-6" iyz="0.0"
+        izz="1e-6"
+      />
+    </inertial>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+    </visual>
+
+  </link>
+
+  <link name="imu_link">
+    <inertial>
+      <mass value="0.1"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia
+        ixx="1e-6" ixy="0.0" ixz="0.0"
+        iyy="1e-6" iyz="0.0"
+        izz="1e-6"
+      />
+    </inertial>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+    </visual>
+
+  </link>
+
+  <link name="left_camera_frame">
+    <inertial>
+      <mass value="0.1"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia
+        ixx="1e-6" ixy="0.0" ixz="0.0"
+        iyy="1e-6" iyz="0.0"
+        izz="1e-6"
+      />
+    </inertial>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+    </visual>
+
+  </link>
+
+  <link name="hokuyo">
+    <inertial>
+      <mass value="1e-5"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia
+        ixx="1e-6" ixy="0.0" ixz="0.0"
+        iyy="1e-6" iyz="0.0"
+        izz="1e-6"
+      />
+    </inertial>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.1 0.1 0.1"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://trixy/meshes/hokuyo.dae"/>
+      </geometry>
+    </visual>
+
+  </link>
+
+  <link name="gps_link">
+    <collision>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.1 0.1 0.1"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.05" length="0.05"/>
+      </geometry>
+    </visual>
+
+    <inertial>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <mass value="1"/>
+      <inertia
+        ixx="1.0" ixy="0.0" ixz="0.0"
+        iyy="1.0" iyz="0.0"
+        izz="1.0"/>
+    </inertial>
+  </link>
+
+  <link name="left_wheel_2">
+    <inertial>
+      <mass value="10"/>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <inertia
+        ixx="0.008333" ixy="0.0" ixz="0.0"
+        iyy="0.008333" iyz="0.0"
+        izz="0.0125"
+      />
+    </inertial>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <geometry>
+        <cylinder radius="0.05" length="0.05"/>
+      </geometry>
+    </visual>
+
+  </link>
+  <link name="left_wheel">
+    <inertial>
+      <mass value="10"/>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <inertia
+        ixx="0.008333" ixy="0.0" ixz="0.0"
+        iyy="0.008333" iyz="0.0"
+        izz="0.0125"
+      />
+    </inertial>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <geometry>
+        <cylinder radius="0.05" length="0.05"/>
+      </geometry>
+    </visual>
+
+  </link>
+
+  <link name="right_wheel">
+    <inertial>
+      <mass value="10"/>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <inertia
+        ixx="0.008333" ixy="0.0" ixz="0.0"
+        iyy="0.008333" iyz="0.0"
+        izz="0.0125"
+      />
+    </inertial>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+      <geometry>
+        <cylinder radius="0.05" length="0.05"/>
+      </geometry>
+    </visual>
+
+  </link>
+  <link name="right_wheel_2">
+  <inertial>
+    <mass value="10"/>
+    <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+    <inertia ixx="0.008333" ixy="0.0" ixz="0.0" iyy="0.008333" iyz="0.0" izz="0.0125"/>
+  </inertial>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+    <geometry>
+      <cylinder radius="0.1" length="0.05"/>
+    </geometry>
+  </collision>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
+    <geometry>
+      <cylinder radius="0.05" length="0.05"/>
+    </geometry>
+  </visual>
+
+</link>
+  <link name='chassis'>
+    <pose>0 0 0.1 0 0 0</pose>
+
+    <inertial>
+      <mass value="15.0"/>
+      <origin xyz="0.0 0 0" rpy=" 0 0 0"/>
+      <inertia
+          ixx="0.4625" ixy="0" ixz="0"
+          iyy="0.2125" iyz="0"
+          izz="0.65"
+      />
+    </inertial>
+
+    <collision name='collision'>
+      <origin xyz="0 0 0.05" rpy=" 0 0 0"/> 
+      <geometry>
+        <box size="0.4 0.6 0.1"/>
+      </geometry>
+    </collision>
+
+    <visual name='chassis_visual'>
+      <origin xyz="0 0 0.05" rpy=" 0 0 0"/>
+      <geometry>
+       <box size="0.4 0.6 0.1"/>
+      </geometry>
+    </visual>
+
+
+    
+
+  </link>
+
+  
+
+</robot>
