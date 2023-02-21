@@ -75,12 +75,12 @@
   </joint>
 
   <joint type="continuous" name="left_wheel_hinge">
-    <origin xyz="-0.1 0.30 0" rpy="0 0 0" />
+    <origin xyz="-0.12 0.30 0" rpy="0 0 0" />
     <parent link="chassis"/>
     <child link="left_wheel" />
     <axis xyz="0 1 0" rpy="0 0 0" />
     <limit effort="10000" velocity="1000" />
-    <dynamics damping="1.0" friction="1.0" />
+    <dynamics damping="1.0" friction="1.0000" />
   </joint>
 
   <joint type="continuous" name="right_wheel_hinge">
@@ -89,16 +89,16 @@
     <child link="right_wheel" />
     <axis xyz="0 1 0" rpy="0 0 0" />
     <limit effort="10000" velocity="1000" />
-    <dynamics damping="1.0" friction="1.0" />
+    <dynamics damping="1.0" friction="1.0000" />
 
   </joint>
   <joint type="continuous" name="right_wheel_hinge_2">
-  <origin xyz="-0.1 -0.30 0" rpy="0 0 0" />
+  <origin xyz="-0.12 -0.30 0" rpy="0 0 0" />
   <parent link="chassis"/>
   <child link="right_wheel_2" />
   <axis xyz="0 1 0" rpy="0 0 0" />
   <limit effort="10000" velocity="1000" />
-  <dynamics damping="1.0" friction="1.0" />
+  <dynamics damping="1.0" friction="1.0000" />
 </joint>
 
 
@@ -108,7 +108,7 @@
   <child link="left_wheel_2" />
   <axis xyz="0 1 0" rpy="0 0 0" />
   <limit effort="10000" velocity="1000" />
-  <dynamics damping="1.0" friction="1.0" />
+  <dynamics damping="1.0" friction="1.00000" />
 </joint>
 
 
@@ -249,6 +249,10 @@
     </link>
 
   <link name="left_wheel_2">
+  <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+    <kp>1000.0</kp>
+    <kd>1.0</kd>
     <inertial>
       <mass value="10"/>
       <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
@@ -275,6 +279,10 @@
 
   </link>
   <link name="left_wheel">
+    <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+    <kp>1000.0</kp>
+    <kd>1.0</kd>
     <inertial>
       <mass value="10"/>
       <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
@@ -302,6 +310,10 @@
   </link>
 
   <link name="right_wheel">
+  <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+    <kp>1000.0</kp>
+    <kd>1.0</kd>
     <inertial>
       <mass value="10"/>
       <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
@@ -328,6 +340,10 @@
 
   </link>
   <link name="right_wheel_2">
+  <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+    <kp>1000.0</kp>
+    <kd>1.0</kd>
   <inertial>
     <mass value="10"/>
     <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
