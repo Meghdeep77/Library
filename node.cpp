@@ -2,20 +2,41 @@
 #include "geometry_msgs/Twist.h"
 #include "sensor_msgs/Imu.h"
 #include "sensor_msgs/NavSatFix.h"
+#include "math.h"
 #include <bits/stdc++.h>
+
 using namespace std;
 
+double ow;
+double ox;
+double oy;
+double oz;
+double siny_cosp;
+double cosy_cosp;
+double yaw;
+double yawd = yaw * 180 / 3.1415;
 
-geometry_msgs::Vector3 pub_data;
+
+
 
 void imuCallback(const sensor_msgs::Imu::ConstPtr& msg)
 {
-  double ow = msg->orientation.w;
-  double ox = msg->orientation.x;
-  double oy = msg->orientation.y;
-  double oz = msg->orientation.z;
 
-  ROS_INFO("Orientation: (%f,%f, %f, %f)", ox, oy, oz,ow);
+
+
+   ow = msg->orientation.w ;
+   ox = msg->orientation.x;
+   oy = msg->orientation.y;
+   oz = msg->orientation.z;
+   siny_cosp = 2 * (ow * oz + ox * oy);
+   cosy_cosp = 1 - 2 * (oy * oy + oz * oz);
+   yaw = std::atan2(siny_cosp, cosy_cosp);
+
+   yawd = yaw * 180 / 3.1415;
+
+
+  ROS_INFO("Orientation: (%f,%f, %f, %f) yaw = %f", ox, oy, oz,ow, yawd);
+
 }
 
 void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
@@ -41,10 +62,22 @@ void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
     ros::Rate loop_rate(20);
 
     geometry_msgs::Twist msg;
+  
+ 
+
+ 
     while (ros::ok())
-    {
-        msg.linear.x += 0.1;
+    {   
+        
+        msg.angular.z = 0.1;
         velPub.publish(msg);
+        if(abs(yawd - 100) < 3){
+          msg.angular.z = 0;
+          velPub.publish(msg);
+
+        }
+
+        
         //imuPub.publish(pub_data);
         ros::spinOnce();
         loop_rate.sleep();
