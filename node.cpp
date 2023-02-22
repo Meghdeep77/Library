@@ -17,9 +17,10 @@ double yaw;
 double yawd = yaw * 180 / 3.1415;
 double lat;
 double lon;
-double x = -0.000027;
-double y = 0.000145;
+double x ;
+double y ;
 double dist;
+double angle;
 
 
 
@@ -69,6 +70,17 @@ void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
     ros::Rate loop_rate(20);
 
     geometry_msgs::Twist msg;
+    cout<<"Enter Longitude";
+    cin>>x;
+    cout<<"Enter Lattitude";
+    cin>>y;
+    angle = atan2(y,x)* 180 / 3.1415;
+    cout<<angle;
+
+
+  
+
+    
   
  
 
@@ -78,7 +90,7 @@ void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
         
         msg.angular.z = 0.1;
         velPub.publish(msg);
-        if(abs(yawd - 100) < 3 && dist > 0.000010){
+        if(abs(yawd - angle) < 1 && dist > 0.000010){
           msg.angular.z = 0;
           msg.linear.x = 1 ;
           velPub.publish(msg);
