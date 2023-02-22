@@ -15,6 +15,12 @@ double siny_cosp;
 double cosy_cosp;
 double yaw;
 double yawd = yaw * 180 / 3.1415;
+double lat;
+double lon;
+double x = -0.000027;
+double y = 0.000145;
+double dist;
+
 
 
 
@@ -41,12 +47,13 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr& msg)
 
 void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
 {
-  double lat = msg->latitude * 10000;
-  double lon = msg->longitude * 10000;
-  double alt = msg->altitude; 
+   lat = msg->latitude;
+   lon = msg->longitude;
+   double alt = msg->altitude; 
   //double oz = msg->orientation.z;
-
-  ROS_INFO("Position: (%f,%f, %f)", lat, lon, alt);
+  dist = sqrt(pow(lat - y, 2) + pow(lon - x, 2));
+  
+  ROS_INFO("Position: (%f,%f, %f) distance = %f", lon, lat, alt, dist);
 }
 
 
@@ -71,11 +78,20 @@ void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
         
         msg.angular.z = 0.1;
         velPub.publish(msg);
-        if(abs(yawd - 100) < 3){
+        if(abs(yawd - 100) < 3 && dist > 0.000010){
+          msg.angular.z = 0;
+          msg.linear.x = 1 ;
+          velPub.publish(msg);
+
+        }
+
+        if(dist <= 0.000010){
+          msg.linear.x = 0 ;
           msg.angular.z = 0;
           velPub.publish(msg);
 
         }
+
 
         
         //imuPub.publish(pub_data);
