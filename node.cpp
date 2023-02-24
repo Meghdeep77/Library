@@ -21,6 +21,11 @@ double x ;
 double y ;
 double dist;
 double angle;
+int flag = 0;
+int flag2 = 0;
+double so;
+double start_lon;
+double start_lat;
 
 
 
@@ -40,9 +45,17 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr& msg)
    yaw = std::atan2(siny_cosp, cosy_cosp);
 
    yawd = yaw * 180 / 3.1415;
+   flag++;
+
+  if(flag == 0){
+    so = yawd;
+    flag++;
 
 
-  ROS_INFO("Orientation: (%f,%f, %f, %f) yaw = %f", ox, oy, oz,ow, yawd);
+  }
+
+
+  ROS_INFO("Orientation: (%f,%f, %f, %f) yaw = %f initial yaw = %f" , ox, oy, oz,ow, yawd,so);
 
 }
 
@@ -54,7 +67,18 @@ void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
   //double oz = msg->orientation.z;
   dist = sqrt(pow(lat - y, 2) + pow(lon - x, 2));
   
-  ROS_INFO("Position: (%f,%f, %f) distance = %f", lon, lat, alt, dist);
+  if(flag2 == 0){
+    start_lon = msg->longitude;
+    start_lat = msg->latitude;
+    flag2 ++;
+
+
+  }
+
+  
+  ROS_INFO("Position: (%f,%f, %f) distance = %f starting position(%f,%f)", lon, lat, alt, dist,start_lon,start_lat);
+  
+
 }
 
 
@@ -74,7 +98,8 @@ void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
     cin>>x;
     cout<<"Enter Lattitude";
     cin>>y;
-    angle = atan2(y,x)* 180 / 3.1415;
+    ros::spinOnce();
+    angle = atan2(y-start_lat,x-start_lon)* 180 / 3.1415;
     cout<<angle;
 
 
@@ -87,12 +112,23 @@ void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
  
     while (ros::ok())
     {   
+
         
+        if(angle > so && dist > 0.000010){
         msg.angular.z = 0.1;
         velPub.publish(msg);
+
+        }
+        else{
+        msg.angular.z = -0.1;
+        velPub.publish(msg);
+
+
+        }
+        
         if(abs(yawd - angle) < 1 && dist > 0.000010){
           msg.angular.z = 0;
-          msg.linear.x = 1 ;
+          msg.linear.x = 10;
           velPub.publish(msg);
 
         }
