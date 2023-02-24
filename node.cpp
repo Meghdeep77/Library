@@ -20,6 +20,7 @@ double lon;
 double x ;
 double y ;
 double dist;
+double sdist;
 double angle;
 int flag = 0;
 int flag2 = 0;
@@ -46,10 +47,11 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr& msg)
 
    yawd = yaw * 180 / 3.1415;
    flag++;
+   
 
-  if(flag == 0){
+  if(flag == 1){
     so = yawd;
-    flag++;
+    
 
 
   }
@@ -63,7 +65,8 @@ void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
 {
    lat = msg->latitude;
    lon = msg->longitude;
-   double alt = msg->altitude; 
+   double alt = msg->altitude;
+   sdist  = sqrt(pow(start_lat - lat, 2) + pow(start_lon - lon, 2)); 
   //double oz = msg->orientation.z;
   dist = sqrt(pow(lat - y, 2) + pow(lon - x, 2));
   
@@ -71,12 +74,15 @@ void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
     start_lon = msg->longitude;
     start_lat = msg->latitude;
     flag2 ++;
-
-
-  }
+    }
 
   
-  ROS_INFO("Position: (%f,%f, %f) distance = %f starting position(%f,%f)", lon, lat, alt, dist,start_lon,start_lat);
+
+
+
+  
+  
+  ROS_INFO("Position: (%f,%f, %f) distance = %f .starting position(%f,%f), sdist = %f", lon, lat, alt, dist,start_lon,start_lat,sdist);
   
 
 }
@@ -101,6 +107,8 @@ void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
     ros::spinOnce();
     angle = atan2(y-start_lat,x-start_lon)* 180 / 3.1415;
     cout<<angle;
+    
+
 
 
   
@@ -109,26 +117,33 @@ void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
   
  
 
- 
+
     while (ros::ok())
     {   
 
         
-        if(angle > so && dist > 0.000010){
+        if(angle > so && dist > 0.000010 && sdist < 0.000010){
         msg.angular.z = 0.1;
         velPub.publish(msg);
 
         }
-        else{
-        msg.angular.z = -0.1;
+
+        if(sdist >= 0.000010){
+        msg.angular.z = 0;
         velPub.publish(msg);
 
-
         }
+        if (angle < so && sdist < 0.000010 && dist > 0.000010){
+        msg.angular.z = -0.1;
+        velPub.publish(msg);
+        }
+
+
+        
         
         if(abs(yawd - angle) < 1 && dist > 0.000010){
           msg.angular.z = 0;
-          msg.linear.x = 10;
+          msg.linear.x = 1;
           velPub.publish(msg);
 
         }
@@ -145,10 +160,11 @@ void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
         //imuPub.publish(pub_data);
         ros::spinOnce();
         loop_rate.sleep();
-        
-    }
-    return 0;
-}
+                        }
+      return 0;
+
+      }
+    
 
 
 
