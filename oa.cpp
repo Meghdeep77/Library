@@ -12,14 +12,21 @@ double dist;
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     size = msg -> ranges.size();
     for(int i = 0; i< size;i++){
-        if(msg->ranges[i]<3){
+
             obstacle_angle = i/2;
             dist = msg-> ranges[i];
-            
+            if(dist<30){
+            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+            if(dist<1)
+            break;
 
-        }
+
+            }
+           
+        
+        
     }
-    ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+  
     
     ROS_INFO("size = %f",size);
 
