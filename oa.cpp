@@ -8,24 +8,56 @@
 double size;
 int obstacle_angle;
 double dist;
+double r_dist;
+bool object_ahead = false;
+bool object_left = false;
+bool object_right = false;
+bool wall_following = false;
+
 
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     size = msg -> ranges.size();
-    for(int i = 0; i< size;i++){
+    for(int i = 90; i< 270;i++){
 
             obstacle_angle = i/2;
             dist = msg-> ranges[i];
             if(dist<30){
             ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
-            if(dist<1)
+            if(dist<1){
+            object_ahead = true;
+            wall_following = true;
+            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+
             break;
-
-
             }
+           }
+           else{
+            object_ahead = false;
+
+           }
            
-        
-        
-    }
+               }
+     for(int i = 270; i< 360;i++){
+
+            obstacle_angle = i/2;
+            r_dist = msg-> ranges[i];
+            if(r_dist<30){
+            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+            if(r_dist<1){
+            object_left = true;
+            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+
+            break;
+            }
+           }
+           else{
+            object_left = false;
+
+           }
+           
+               }
+    
+    
   
     
     ROS_INFO("size = %f",size);
@@ -47,11 +79,19 @@ int main(int argc, char **argv)
     while (ros::ok())
     {   
         
-        if(dist<1){
+        if(wall_following == true && object_ahead == true){
             msg.linear.x = 0;
-            msg.angular.z = 0.1;
+            msg.angular.z = -0.1;
+            ROS_INFO("Obstacle ahead");
             velPub.publish(msg);
         }
+        else if(wall_following == true && object_left == true && object_ahead == false){
+            msg.linear.x = 0.5;
+            msg.angular.z = 0.1;
+            ROS_INFO("Obstacle on left");
+            velPub.publish(msg);
+        }
+
         else{
             msg.linear.x = 1;
             velPub.publish(msg);
