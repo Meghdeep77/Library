@@ -25,6 +25,7 @@ double sdist;
 double angle;
 int flag = 0;
 int flag2 = 0;
+int flag3 =0;
 double so;
 double start_lon;
 double start_lat;
@@ -102,6 +103,11 @@ void Planner::gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
     start_lat = msg->latitude;
     flag2 ++;
     }
+  if(flag2 == 10){
+    start_lon = lon;
+    start_lat = lat;
+
+  }
 ROS_INFO("Position: (%f,%f, %f) distance = %f .starting position(%f,%f), sdist = %f", lon, lat, alt, dist,start_lon,start_lat,sdist);
   
 }
@@ -168,6 +174,12 @@ void Planner::laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
            }
            
                }
+
+    if(object_ahead && object_left && object_back_left == false && sdist >0.000020 ){
+      wall_following = false;
+      flag2 = 10;
+      ros::spinOnce();
+    }
     
     
   
@@ -183,16 +195,53 @@ int main(int argc, char** argv) {
     ros::Publisher velPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
     ros::Rate loop_rate(20);
     geometry_msgs::Twist msg;
+    if(flag3 == 0){
     cout<<"Enter Longitude";
     cin>>x;
     cout<<"Enter Lattitude";
     cin>>y;
     ros::spinOnce();
+    flag3++;
+    }
     
-    while (ros::ok())
-    {   
+    
+    
+    while (ros::ok()){
+
+    if(wall_following == true){
+      ROS_INFO("Avoiding obstacle");
+
+        if(wall_following == true && object_ahead == true){
+            msg.linear.x = 0;
+            msg.angular.z = -0.1;
+            ROS_INFO("Obstacle ahead");
+            velPub.publish(msg);
+        }
+        else if(wall_following == true && object_left == true && object_ahead == false){
+            msg.linear.x = 0.5;
+            msg.angular.z = 0;
+            ROS_INFO("Obstacle on left");
+            velPub.publish(msg);
+        }
+        else if(wall_following == true && object_left == false && object_ahead == false && object_back_left == true){
+            msg.linear.x = 0;
+            msg.angular.z = 0.1;
+            ROS_INFO("Corner");
+            velPub.publish(msg);
+        }
+
+        
+        
+        ros::spinOnce();
+        loop_rate.sleep();
+
+
+    }
+    else{
+      ROS_INFO("Going to Point");
       angle = atan2(y-lat,x -lon)* 180 / 3.1415;
       cout<<angle;
+      ros::spinOnce();
         if(angle > so && dist > 0.000010 && sdist < 0.000010){
         msg.angular.z = 0.1;
         velPub.publish(msg);
@@ -237,6 +286,7 @@ int main(int argc, char** argv) {
         }
        ros::spinOnce();
         loop_rate.sleep();
+    }
                         }
       return 0;
 
