@@ -2,6 +2,7 @@
 #include "geometry_msgs/Twist.h"
 #include "sensor_msgs/Imu.h"
 #include "sensor_msgs/NavSatFix.h"
+#include "sensor_msgs/LaserScan.h"
 #include "math.h"
 #include <bits/stdc++.h>
 
@@ -28,6 +29,17 @@ double so;
 double start_lon;
 double start_lat;
 double hdist;
+double size;
+int obstacle_angle;
+double fdist;
+double l_dist;
+double lb_dist;
+bool object_ahead = false;
+bool object_left = false;
+bool object_right = false;
+bool object_back_left = false;
+bool wall_following = false;
+
 
 
 
@@ -39,11 +51,13 @@ public:
 
     void imuCallback(const sensor_msgs::Imu::ConstPtr& msg);
     void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg);
+    void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg);
     
 private:
     ros::NodeHandle* nh;
     ros::Subscriber sub1;
     ros::Subscriber gpssub;
+    ros::Subscriber lasersub;
     
     };
 
@@ -51,6 +65,8 @@ Planner::Planner(ros::NodeHandle *nh) {
     this->nh = nh;
     sub1 = nh->subscribe("/imu", 1000, &Planner::imuCallback, this);
     gpssub = nh->subscribe("/gps/fix", 1000, &Planner::gpsCallback, this);
+    lasersub = nh->subscribe("/scan", 1000, &Planner::laserCallback, this);
+
 }
 
 void Planner::imuCallback(const sensor_msgs::Imu::ConstPtr& msg) {
@@ -87,6 +103,76 @@ void Planner::gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
     flag2 ++;
     }
 ROS_INFO("Position: (%f,%f, %f) distance = %f .starting position(%f,%f), sdist = %f", lon, lat, alt, dist,start_lon,start_lat,sdist);
+  
+}
+
+void Planner::laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
+{
+  size = msg -> ranges.size();
+    for(int i = 276; i< 340;i++){
+
+            obstacle_angle = i/2;
+            fdist = msg-> ranges[i];
+            if(fdist<30){
+            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+            if(fdist<1){
+            object_ahead = true;
+            wall_following = true;
+            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+
+            break;
+            }
+           }
+           else{
+            object_ahead = false;
+
+           }
+           
+               }
+     for(int i = 390; i< 480;i++){
+
+            obstacle_angle = i/2;
+            lb_dist = msg-> ranges[i];
+            if(lb_dist<30){
+            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+            if(lb_dist<1){
+            object_left = true;
+            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+
+            break;
+            }
+           }
+           else{
+            object_left = false;
+
+           }
+           
+               }
+
+    for(int i = 480; i< 600;i++){
+
+            obstacle_angle = i/2;
+            l_dist = msg-> ranges[i];
+            if(l_dist<30){
+            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+            if(l_dist<1){
+            object_back_left = true;
+            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+
+            break;
+            }
+           }
+           else{
+            object_back_left= false;
+
+           }
+           
+               }
+    
+    
+  
+    
+    ROS_INFO("size = %f",size);
   
 }
 
@@ -155,7 +241,3 @@ int main(int argc, char** argv) {
       return 0;
 
       }
-    
-    
-
-    
