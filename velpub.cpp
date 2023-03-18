@@ -94,7 +94,7 @@ void Planner::gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
    lat = msg->latitude;
    lon = msg->longitude;
    double alt = msg->altitude;
-   sdist  = sqrt(pow(start_lat - lat, 2) + pow(start_lon - lon, 2)); 
+   
   //double oz = msg->orientation.z;
   dist = sqrt(pow(lat - y, 2) + pow(lon - x, 2));
   
@@ -106,8 +106,10 @@ void Planner::gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
   if(flag2 == 10){
     start_lon = lon;
     start_lat = lat;
+    flag2++;
 
   }
+  sdist  = sqrt(pow(start_lat - lat, 2) + pow(start_lon - lon, 2)); 
 ROS_INFO("Position: (%f,%f, %f) distance = %f .starting position(%f,%f), sdist = %f", lon, lat, alt, dist,start_lon,start_lat,sdist);
   
 }
@@ -115,44 +117,54 @@ ROS_INFO("Position: (%f,%f, %f) distance = %f .starting position(%f,%f), sdist =
 void Planner::laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
   size = msg -> ranges.size();
-    for(int i = 276; i< 340;i++){
+    for(int i = 276; i< 390;i++){
 
             obstacle_angle = i/2;
             fdist = msg-> ranges[i];
             if(fdist<30){
-            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
-            if(fdist<1){
+            //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+            if(fdist<1.5){
             object_ahead = true;
             wall_following = true;
             ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
 
             break;
             }
-           }
-           else{
+            else{
             object_ahead = false;
 
            }
            
+           
+               }
+               else{
+            object_ahead = false;}
+               
                }
      for(int i = 390; i< 480;i++){
 
             obstacle_angle = i/2;
             lb_dist = msg-> ranges[i];
             if(lb_dist<30){
-            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
-            if(lb_dist<1){
+            //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+            if(lb_dist<1.5){
             object_left = true;
             ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
 
             break;
             }
-           }
-           else{
+            else{
             object_left = false;
 
            }
            
+           
+               }
+            else{
+            object_left = false;
+
+           }
+               
                }
 
     for(int i = 480; i< 600;i++){
@@ -160,13 +172,17 @@ void Planner::laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
             obstacle_angle = i/2;
             l_dist = msg-> ranges[i];
             if(l_dist<30){
-            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
-            if(l_dist<1){
+            //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+            if(l_dist<1.5){
             object_back_left = true;
             ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
 
             break;
             }
+            else{
+            object_back_left= false;
+
+           }
            }
            else{
             object_back_left= false;
@@ -175,11 +191,7 @@ void Planner::laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
            
                }
 
-    if(object_ahead && object_left && object_back_left == false && sdist >0.000020 ){
-      wall_following = false;
-      flag2 = 10;
-      ros::spinOnce();
-    }
+    
     
     
   
@@ -207,9 +219,21 @@ int main(int argc, char** argv) {
     
     
     while (ros::ok()){
+    
+
+
+     if(object_ahead == false && object_left == false && object_back_left == false ){
+        wall_following = false;
+        flag2 = 10;
+        ros::spinOnce();
+
+    }
+
 
     if(wall_following == true){
+      ROS_INFO("wall following = %d",wall_following);
       ROS_INFO("Avoiding obstacle");
+      ROS_INFO("object ahead= %d, object left = %d, object back left = %d",object_ahead,object_left,object_back_left);
 
         if(wall_following == true && object_ahead == true){
             msg.linear.x = 0;
@@ -229,8 +253,9 @@ int main(int argc, char** argv) {
             ROS_INFO("Corner");
             velPub.publish(msg);
         }
+    
 
-        
+
         
         ros::spinOnce();
         loop_rate.sleep();
