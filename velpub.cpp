@@ -123,7 +123,7 @@ void Planner::laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
             fdist = msg-> ranges[i];
             if(fdist<30){
             //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
-            if(fdist<1.5){
+            if(fdist<1.3){
             object_ahead = true;
             wall_following = true;
             ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
@@ -147,7 +147,7 @@ void Planner::laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
             lb_dist = msg-> ranges[i];
             if(lb_dist<30){
             //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
-            if(lb_dist<1.5){
+            if(lb_dist<1.3){
             object_left = true;
             ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
 
@@ -173,7 +173,7 @@ void Planner::laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
             l_dist = msg-> ranges[i];
             if(l_dist<30){
             //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
-            if(l_dist<1.5){
+            if(l_dist<1.3){
             object_back_left = true;
             ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
 
@@ -196,7 +196,7 @@ void Planner::laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
     
   
     
-    ROS_INFO("size = %f",size);
+    //ROS_INFO("size = %f",size);
   
 }
 
@@ -222,18 +222,20 @@ int main(int argc, char** argv) {
     
 
 
-     if(object_ahead == false && object_left == false && object_back_left == false ){
-        wall_following = false;
-        flag2 = 10;
-        ros::spinOnce();
-
-    }
+     ROS_INFO("flag2 = %d",flag2);
 
 
     if(wall_following == true){
       ROS_INFO("wall following = %d",wall_following);
+      
       ROS_INFO("Avoiding obstacle");
       ROS_INFO("object ahead= %d, object left = %d, object back left = %d",object_ahead,object_left,object_back_left);
+      if(object_ahead == false && object_left == false && object_back_left == false ){
+        wall_following = false;
+        flag2 = 0;
+        ros::spinOnce();
+
+    }
 
         if(wall_following == true && object_ahead == true){
             msg.linear.x = 0;
@@ -267,7 +269,7 @@ int main(int argc, char** argv) {
       angle = atan2(y-lat,x -lon)* 180 / 3.1415;
       cout<<angle;
       ros::spinOnce();
-        if(angle > so && dist > 0.000010 && sdist < 0.000010){
+        if(angle > so && dist > 0.000010 && sdist < 0.000020){
         msg.angular.z = 0.1;
         velPub.publish(msg);
         }
@@ -276,7 +278,7 @@ int main(int argc, char** argv) {
         velPub.publish(msg);
         }
 
-        if (angle < so && sdist < 0.000010 && dist > 0.000010){
+        if (angle < so && sdist < 0.000020 && dist > 0.000010){
         msg.angular.z = -0.1;
         velPub.publish(msg);
         }
@@ -286,7 +288,7 @@ int main(int argc, char** argv) {
           velPub.publish(msg);
 
         }
-        if(abs(yawd - angle) > 0.5 && sdist > 0.000020){
+        if(abs(yawd - angle) > 0.5 && sdist > 0.000050){
 
           if(yawd > angle ){
 
