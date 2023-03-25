@@ -80,14 +80,18 @@ void Planner::imuCallback(const sensor_msgs::Imu::ConstPtr& msg) {
     yaw = std::atan2(siny_cosp, cosy_cosp);
 
     yawd = yaw * 180 / 3.1415;
+    if(yawd < 0){
+    yawd = 360 + yawd;
+   }
 
-    flag++;
+    
 
-    if (flag == 1) {
+    if (flag == 0) {
         so = yawd;
+        flag++;
     }
 
-    ROS_INFO("Orientation: (%f,%f, %f, %f) yaw = %f initial yaw = %f", ox, oy, oz, ow, yawd, so);
+    //ROS_INFO("Orientation: (%f,%f, %f, %f) yaw = %f initial yaw = %f", ox, oy, oz, ow, yawd, so);
 }
 void Planner::gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
 {
@@ -110,7 +114,7 @@ void Planner::gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg)
 
   }
   sdist  = sqrt(pow(start_lat - lat, 2) + pow(start_lon - lon, 2)); 
-ROS_INFO("Position: (%f,%f, %f) distance = %f .starting position(%f,%f), sdist = %f", lon, lat, alt, dist,start_lon,start_lat,sdist);
+//ROS_INFO("Position: (%f,%f, %f) distance = %f .starting position(%f,%f), sdist = %f", lon, lat, alt, dist,start_lon,start_lat,sdist);
   
 }
 
@@ -126,7 +130,7 @@ void Planner::laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
             if(fdist<1.3){
             object_ahead = true;
             wall_following = true;
-            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+            //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
 
             break;
             }
@@ -149,7 +153,7 @@ void Planner::laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
             //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
             if(lb_dist<1.3){
             object_left = true;
-            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+            //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
 
             break;
             }
@@ -175,7 +179,7 @@ void Planner::laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
             //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
             if(l_dist<1.3){
             object_back_left = true;
-            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+            //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
 
             break;
             }
@@ -223,6 +227,7 @@ int main(int argc, char** argv) {
 
 
      ROS_INFO("flag2 = %d",flag2);
+     ROS_INFO("flag = %d",flag);
 
 
     if(wall_following == true){
@@ -233,6 +238,10 @@ int main(int argc, char** argv) {
       if(object_ahead == false && object_left == false && object_back_left == false ){
         wall_following = false;
         flag2 = 0;
+        flag = 0;
+        sdist = 0;
+       
+        
         ros::spinOnce();
 
     }
@@ -255,6 +264,13 @@ int main(int argc, char** argv) {
             ROS_INFO("Corner");
             velPub.publish(msg);
         }
+
+        if(dist <= 0.000010){
+          msg.linear.x = 0 ;
+          msg.angular.z = 0;
+          velPub.publish(msg);
+        }
+
     
 
 
@@ -265,43 +281,74 @@ int main(int argc, char** argv) {
 
     }
     else{
-      ROS_INFO("Going to Point");
+        ROS_INFO("Going to Point");
+        ROS_INFO("sdist = %f ",sdist);
+
+        
+       if(object_ahead == true || object_left == true || object_back_left == true ){
+        wall_following = true;
+
+    }
+
+
+      
       angle = atan2(y-lat,x -lon)* 180 / 3.1415;
+      if(angle < 0){
+        angle = 360 + angle;
+      }
       cout<<angle;
       ros::spinOnce();
-        if(angle > so && dist > 0.000010 && sdist < 0.000020){
-        msg.angular.z = 0.1;
-        velPub.publish(msg);
-        }
-        if(sdist >= 0.000010){
-        msg.angular.z = 0;
-        velPub.publish(msg);
-        }
 
-        if (angle < so && sdist < 0.000020 && dist > 0.000010){
-        msg.angular.z = -0.1;
-        velPub.publish(msg);
-        }
-        if(abs(yawd - angle) < 1 && dist > 0.000010){
+      if(abs(yawd - angle) < 1 && dist > 0.000010){
           msg.angular.z = 0;
           msg.linear.x = 1;
+          ROS_INFO("error %f",abs(yawd - angle));
           velPub.publish(msg);
 
         }
-        if(abs(yawd - angle) > 0.5 && sdist > 0.000050){
+        else if(angle > so && dist > 0.000010 && sdist < 0.000020){
+        if(angle - so < 360 - (angle -so)){
+        msg.angular.z = 0.1;
+        velPub.publish(msg);
+        }
+        else{
+        msg.angular.z = -0.1;
+        velPub.publish(msg);
+        }
+        }
+
+        else if(so > angle && dist > 0.000010 && sdist < 0.000020){
+        if(so - angle  < 360 - (so  - angle)){
+        msg.linear.x = 0;
+        msg.angular.z = -0.1;
+        velPub.publish(msg);
+        }
+        else{
+        msg.linear.x = 0;
+        msg.angular.z = 0.1;
+        velPub.publish(msg);
+        }
+        }
+        
+
+      
+        
+        if(abs(yawd - angle) > 0.5 && sdist > 0.000030){
 
           if(yawd > angle ){
 
           msg.angular.z = -0.2;
           msg.linear.x = 1;
+          ROS_INFO("error %f",abs(yawd - angle));
           velPub.publish(msg);
           }
 
-          if(yawd < angle ){
+          else if(yawd < angle ){
 
           msg.angular.z = 0.2;
           msg.linear.x = 1;
           velPub.publish(msg);
+          ROS_INFO("error %f",abs(yawd - angle));
           }
         }
 
