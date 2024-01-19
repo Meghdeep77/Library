@@ -28,30 +28,26 @@ def arm_and_takeoff(aTargetAltitude):
     """
 
     print("Basic pre-arm checks")
-    # Don't try to arm until autopilot is ready
+
     while not vehicle.is_armable:
         print(" Waiting for vehicle to initialise...")
         time.sleep(1)
 
     print("Arming motors")
-    # Copter should arm in GUIDED mode
+
     vehicle.mode = VehicleMode("GUIDED")
     vehicle.armed = True
 
-    # Confirm vehicle armed before attempting to take off
+
     while not vehicle.armed:
         print(" Waiting for arming...")
         time.sleep(1)
 
     print("Taking off!")
-    vehicle.simple_takeoff(aTargetAltitude)  # Take off to target altitude
-
-    # Wait until the vehicle reaches a safe height before processing the goto
-    #  (otherwise the command after Vehicle.simple_takeoff will execute
-    #   immediately).
+    vehicle.simple_takeoff(aTargetAltitude)
     while True:
         print(" Altitude: ", vehicle.location.global_relative_frame.alt)
-        # Break and return from function just below target altitude.
+
         if vehicle.location.global_relative_frame.alt >= aTargetAltitude * 0.95:
             print("Reached target altitude")
             break
@@ -62,33 +58,62 @@ def print_current_coordinates():
     print("Current Coordinates: Lat={}, Lon={}, Alt={}".format(
         current_location.lat, current_location.lon, current_location.alt
     ))
+
+#vehicle.wait_ready('home_location', timeout=10)
+current_location = vehicle.location.global_relative_frame
+
+launch_latitude = current_location.lat
+launch_longitude = current_location.lon
+launch_altitude = current_location.alt
+launch  = LocationGlobalRelative(launch_latitude, launch_longitude , launch_altitude)
 arm_and_takeoff(10)
 print_current_coordinates()
 print("Set default/target airspeed to 3")
-vehicle.airspeed = 3
+vehicle.airspeed = 10
 
 print("Going towards first point for 30 seconds ...")
 point1 = LocationGlobalRelative(-35.361354, 149.165218, 20)
 vehicle.simple_goto(point1)
 
-# sleep so we can see the change in map
+
 
 time.sleep(30)
 print_current_coordinates()
 print("Going towards second point for 30 seconds (groundspeed set to 10 m/s) ...")
 point2 = LocationGlobalRelative(-35.363244, 149.168801, 20)
-vehicle.simple_goto(point2, groundspeed=10)
+vehicle.simple_goto(point2, groundspeed=20)
 
-# sleep so we can see the change in map
+
 time.sleep(30)
 print_current_coordinates()
+# Return to Launch (RTL)
 print("Returning to Launch")
-vehicle.mode = VehicleMode("RTL")
-print_current_coordinates()
-# Close vehicle object before exiting script
+print("Launch Coordinates: Lat={}, Lon={}, Alt={}".format(
+        launch_latitude, launch_longitude, launch_altitude
+    ))
+vehicle.simple_goto(launch, groundspeed=20)
+time.sleep(30)
+while vehicle.location.global_relative_frame.alt > 0:
+    print_current_coordinates()
+    time.sleep(1)
+
+
+while not vehicle.is_armable:
+    time.sleep(1)
+
+print("Landing...")
+vehicle.mode = VehicleMode("LAND")
+
+
+while vehicle.location.global_relative_frame.alt > 0:
+    print_current_coordinates()
+    time.sleep(1)
+
+print("Vehicle has landed.")
+
+# Close and Cleanup
 print("Close vehicle object")
 vehicle.close()
 
-# Shut down simulator if it was started.
 if sitl:
     sitl.stop()
