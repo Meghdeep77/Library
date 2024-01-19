@@ -53,6 +53,24 @@ def arm_and_takeoff(aTargetAltitude):
             break
         time.sleep(1)
 
+
+def hover_at_altitude(current_loc,target_altitude):
+    temp = LocationGlobalRelative(current_loc.lat, current_loc.lon, target_altitude)
+    print("Hovering at {} meters".format(target_altitude))
+    vehicle.simple_goto(temp)
+    while True:
+        current_altitude = vehicle.location.global_relative_frame.alt
+        print("Altitude: ", current_altitude)
+        print_current_coordinates()
+        print("Target Coordinates: Lat={}, Lon={}, Alt={}".format(
+            temp.lat, temp.lon, temp.alt
+        ))
+        if target_altitude - 0.1 <= current_altitude <= target_altitude + 0.1:
+            print("Altitude within threshold. Hovering.")
+            time.sleep(5)
+            break
+
+        time.sleep(1)
 def print_current_coordinates():
     current_location = vehicle.location.global_relative_frame
     print("Current Coordinates: Lat={}, Lon={}, Alt={}".format(
@@ -121,6 +139,7 @@ while True:
     print("Distance to target: ", distance_to_target)
     if distance_to_target < 1:
         print("Reached the third point.")
+        hover_at_altitude(current_location,5)
         break
     time.sleep(1)
 
