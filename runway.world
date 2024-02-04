@@ -96,25 +96,18 @@
       </include>
       <pose> 0 0 0 0 0 0</pose>
       <link name="tf02_lidar_link">
-            <pose>0 0 0 0 0 0 </pose>
-      	<inertial>
-      <mass value="1e-5"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <inertia
-        ixx="1e-6" ixy="0.0" ixz="0.0"
-        iyy="1e-6" iyz="0.0"
-        izz="1e-6"
-      />
-    </inertial>
-            <collision name="collision">
-                <geometry>
-                    <box>
-                        <size>0.1 0.1 0.1</size> 
-                    </box>
-                </geometry>
-            </collision>
+            <pose>0 0 -0.02 0 0 0 </pose>
+      <inertial>
+        <mass>0.01</mass>
+        <inertia>
+          <ixx>0.001</ixx>
+          <iyy>0.001</iyy>
+          <izz>0.001</izz>
+        </inertia>
+      </inertial>
+            
             <visual name="visual">
-                <pose>0 0 0.3 0 0 0</pose>
+                <pose>0 0 0.15 0 0 0</pose>
                 <geometry>
                     <box>
                         <size>0.02 0.02 0.02</size> 
@@ -123,7 +116,7 @@
             </visual>
           
             <sensor type="ray" name="tf02_lidar_sensor">
-                    <pose>0 0 0.3 0 0 0</pose>
+                    <pose>0 0 0.15 0 0 0</pose>
                     <visualize>true</visualize>
                     <update_rate>10</update_rate>
                     <ray>
@@ -152,9 +145,16 @@
 
         <!-- Joint to attach the Lidar to the robot -->
         <joint name="tf02_lidar_joint" type="fixed">
-            <pose>0 0 0.3 0 0 0</pose>
+            <pose>0 0 0.15 0 0 0</pose>
             <parent>iris::drone_with_camera::iris::base_link</parent>
             <child>tf02_lidar_link</child>
+            <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <upper>0</upper>
+          <lower>0</lower>
+        </limit>
+      </axis>
         </joint>
     </model>
   </world>
