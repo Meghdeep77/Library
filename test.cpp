@@ -7,20 +7,38 @@
 #include "sensor_msgs/Imu.h"
 #include <geometry_msgs/TwistStamped.h>
 
-bool object_ahead  = false;
-bool object_left = false;
-int obstacle_angle;
-double lb_dist;
-double fdist;
 double ow;
 double ox;
 double oy;
 double oz;
-double angle;
 double siny_cosp;
 double cosy_cosp;
 double yaw;
 double yawd = yaw * 180 / 3.1415;
+double lat;
+double lon;
+double x ;
+double y ;
+double dist;
+double sdist;
+double angle;
+int flag = 0;
+int flag2 = 0;
+int flag3 =0;
+double so;
+double start_lon;
+double start_lat;
+double hdist;
+double size;
+int obstacle_angle;
+double fdist;
+double l_dist;
+double lb_dist;
+bool object_ahead = false;
+bool object_left = false;
+bool object_right = false;
+bool object_back_left = false;
+bool wall_following = false;
 //include API 
 
 void imuCallback(const sensor_msgs::Imu::ConstPtr& msg) {
@@ -42,11 +60,11 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr& msg) {
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     geometry_msgs::Point current_pos = get_current_location();
 	ROS_INFO("In laser callback");
-	for(int i = 320; i< 400;i++){
+	for(int i = 186; i< 254;i++){
 
-            obstacle_angle = i/4;
+            obstacle_angle = i* 0.375;
             fdist = msg-> ranges[i];
-            if(fdist<1){
+            if(fdist<2){
             object_ahead  = true;
 			///ROS_INFO("Obstacle ahead");
             ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
@@ -62,13 +80,13 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 
            }
            }
-	for(int i = 680; i< 720;i++){
+	for(int i = 453; i< 510;i++){
 
-            obstacle_angle = i/4;
+            obstacle_angle = i* 0.375;
             lb_dist = msg-> ranges[i];
             if(lb_dist<30){
             //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
-            if(lb_dist<1){
+            if(lb_dist<2){
             object_left = true;
 			///ROS_INFO("Obstacle left");
             ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
@@ -84,6 +102,29 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
            
                }
                
+               }
+			for(int i = 693; i< 720;i++){
+
+            obstacle_angle = i* 0.375;
+            l_dist = msg-> ranges[i];
+            if(l_dist<30){
+            //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+            if(l_dist<2){
+            object_back_left = true;
+            //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+
+            break;
+            }
+            else{
+            object_back_left= false;
+
+           }
+           }
+           else{
+            object_back_left= false;
+
+           }
+           
                }
 			   
 	
@@ -135,7 +176,7 @@ int main(int argc, char** argv)
 	ROS_INFO("Desired angle = %f",angle);
 	geometry_msgs::TwistStamped cmd_vel_msg;
 
-	if(!object_ahead){
+	if(!object_ahead ){
 
 		if(70< yawd && yawd< 110){
 		
@@ -187,7 +228,20 @@ int main(int argc, char** argv)
 	}
 
 	else{
-		cmd_vel_msg.header.stamp = ros::Time::now();
+        if(object_back_left && !object_left){
+
+	cmd_vel_msg.header.stamp = ros::Time::now();
+    cmd_vel_msg.twist.linear.x = 0.0;  
+    cmd_vel_msg.twist.linear.y = 0.0;  
+    cmd_vel_msg.twist.linear.z = 0.0;  
+    cmd_vel_msg.twist.angular.x = 0.0; 
+    cmd_vel_msg.twist.angular.y = 0.0; 
+    cmd_vel_msg.twist.angular.z = 0.1; 
+    cmd_vel_pub.publish(cmd_vel_msg);
+    
+    }
+    else{
+    cmd_vel_msg.header.stamp = ros::Time::now();
     cmd_vel_msg.twist.linear.x = 0.0;  
     cmd_vel_msg.twist.linear.y = 0.0;  
     cmd_vel_msg.twist.linear.z = 0.0;  
@@ -195,10 +249,14 @@ int main(int argc, char** argv)
     cmd_vel_msg.twist.angular.y = 0.0; 
     cmd_vel_msg.twist.angular.z = -0.1; 
     cmd_vel_pub.publish(cmd_vel_msg);
+    }
+    
+
 
 	}
+    
 	}
-	if(object_ahead){
+	if(object_ahead  ){
 	
 		ROS_INFO("Obstacle ahead");
 		cmd_vel_msg.header.stamp = ros::Time::now();
@@ -279,6 +337,69 @@ int main(int argc, char** argv)
 
 	}
 		}
+    if( object_left == false && object_ahead == false && object_back_left == true){
+        ROS_INFO("Corner");
+           if(70< yawd && yawd< 110){
+		
+	 cmd_vel_msg.header.stamp = ros::Time::now();
+    cmd_vel_msg.twist.linear.x = 0.0;  
+    cmd_vel_msg.twist.linear.y = 0.15;  
+    cmd_vel_msg.twist.linear.z = 0.0;  
+    cmd_vel_msg.twist.angular.x = 0.0; 
+    cmd_vel_msg.twist.angular.y = 0.0; 
+    cmd_vel_msg.twist.angular.z = 0.1; 
+    cmd_vel_pub.publish(cmd_vel_msg);}
+
+	else if ((yawd > 0 && yawd< 30 )||(yawd < 360 && yawd > 330)){
+		cmd_vel_msg.header.stamp = ros::Time::now();
+    cmd_vel_msg.twist.linear.x = 0.15;  
+    cmd_vel_msg.twist.linear.y = 0.0;  
+    cmd_vel_msg.twist.linear.z = 0.0;  
+    cmd_vel_msg.twist.angular.x = 0.0; 
+    cmd_vel_msg.twist.angular.y = 0.0; 
+    cmd_vel_msg.twist.angular.z = 0.1; 
+    cmd_vel_pub.publish(cmd_vel_msg);
+
+
+	}
+	else if (240 < yawd && yawd < 300){
+		cmd_vel_msg.header.stamp = ros::Time::now();
+    cmd_vel_msg.twist.linear.x = 0.0;  
+    cmd_vel_msg.twist.linear.y = -0.15;  
+    cmd_vel_msg.twist.linear.z = 0.0;  
+    cmd_vel_msg.twist.angular.x = 0.0; 
+    cmd_vel_msg.twist.angular.y = 0.0; 
+    cmd_vel_msg.twist.angular.z = 0.1; 
+    cmd_vel_pub.publish(cmd_vel_msg);
+
+
+	}
+
+	else if (150 < yawd && yawd< 210){
+		cmd_vel_msg.header.stamp = ros::Time::now();
+    cmd_vel_msg.twist.linear.x = -0.15;  
+    cmd_vel_msg.twist.linear.y = 0.0;  
+    cmd_vel_msg.twist.linear.z = 0.0;  
+    cmd_vel_msg.twist.angular.x = 0.0; 
+    cmd_vel_msg.twist.angular.y = 0.0; 
+    cmd_vel_msg.twist.angular.z = 0.1; 
+    cmd_vel_pub.publish(cmd_vel_msg);
+
+
+	}
+
+	else{
+		cmd_vel_msg.header.stamp = ros::Time::now();
+    cmd_vel_msg.twist.linear.x = 0.0;  
+    cmd_vel_msg.twist.linear.y = 0.0;  
+    cmd_vel_msg.twist.linear.z = 0.0;  
+    cmd_vel_msg.twist.angular.x = 0.0; 
+    cmd_vel_msg.twist.angular.y = 0.0; 
+    cmd_vel_msg.twist.angular.z = 0.1; 
+    cmd_vel_pub.publish(cmd_vel_msg);
+
+	}
+        }
 		
 	
 		
