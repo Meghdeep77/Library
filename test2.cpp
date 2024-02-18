@@ -6,20 +6,40 @@
 #include "sensor_msgs/Imu.h"
 #include <geometry_msgs/TwistStamped.h>
 
-bool object_ahead  = false;
-bool object_left = false;
-int obstacle_angle;
-double lb_dist;
-double fdist;
 double ow;
 double ox;
 double oy;
 double oz;
-double angle;
 double siny_cosp;
 double cosy_cosp;
 double yaw;
 double yawd = yaw * 180 / 3.1415;
+double lat;
+double lon;
+double x ;
+double y ;
+double dist;
+double sdist;
+double angle;
+int flag = 0;
+int flag2 = 0;
+int flag3 =0;
+double so;
+double start_lon;
+double start_lat;
+double hdist;
+double size;
+int obstacle_angle;
+double fdist;
+double l_dist;
+double lb_dist;
+double last_left;
+
+bool object_ahead = false;
+bool object_left = false;
+bool object_right = false;
+bool object_back_left = false;
+bool wall_following = false;
 //include API 
 
 void imuCallback(const sensor_msgs::Imu::ConstPtr& msg) {
@@ -41,13 +61,14 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr& msg) {
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     geometry_msgs::Point current_pos = get_current_location();
 	ROS_INFO("In laser callback");
-	for(int i = 240; i< 480;i++){
-
-            obstacle_angle = i/4;
+	for(int i = 300; i< 415;i++){
+            ;
+            obstacle_angle = i/2;
             fdist = msg-> ranges[i];
             if(fdist<1){
             object_ahead  = true;
 			///ROS_INFO("Obstacle ahead");
+            ROS_INFO("Object front");
             ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
 			geometry_msgs::TwistStamped cmd_vel_msg;
 
@@ -61,15 +82,16 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 
            }
            }
-	for(int i = 680; i< 720;i++){
-
-            obstacle_angle = i/4;
+	for(int i = 530; i< 550 ;i++){
+            
+            obstacle_angle = i/2;
             lb_dist = msg-> ranges[i];
             if(lb_dist<30){
             //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
             if(lb_dist<1){
             object_left = true;
 			///ROS_INFO("Obstacle left");
+            ROS_INFO("Object Left");
             ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
             //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
 
@@ -83,6 +105,28 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 
                }
 
+               }
+
+    
+			for(int i = 600; i< 700;i++){
+
+            obstacle_angle = i/2;
+            l_dist = msg-> ranges[i];
+        
+            //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+            if(l_dist<1.5){
+            object_back_left = true;
+            ROS_INFO("Corner");
+            ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
+
+            break;
+            }
+            else{
+            object_back_left= false;
+
+           }
+           
+           
                }
 
 
@@ -145,6 +189,20 @@ int main(int argc, char** argv)
     cmd_vel_msg.twist.angular.z = 0.0; 
     cmd_vel_pub.publish(cmd_vel_msg);
     ros::spinOnce();
+
+     if( object_left == false && object_ahead == false && object_back_left == true){
+        ROS_INFO("Corner");
+        geometry_msgs::TwistStamped cmd_vel_msg;
+	 cmd_vel_msg.header.stamp = ros::Time::now();
+    cmd_vel_msg.twist.linear.x = 0.0;  
+    cmd_vel_msg.twist.linear.y = 0.0;  
+    cmd_vel_msg.twist.linear.z = 0.0;  
+    cmd_vel_msg.twist.angular.x = 0.0; 
+    cmd_vel_msg.twist.angular.y = 0.0; 
+    cmd_vel_msg.twist.angular.z = 0.1;
+    ros::spinOnce();
+
+    }
     }
 	
 	if(object_ahead){
@@ -179,8 +237,9 @@ int main(int argc, char** argv)
     cmd_vel_pub.publish(cmd_vel_msg);
     ros::spinOnce();}
 
-	
+   
 		}
+
 
 
 
