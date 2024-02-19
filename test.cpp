@@ -64,7 +64,7 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 
             obstacle_angle = i* 0.375;
             fdist = msg-> ranges[i];
-            if(fdist<2){
+            if(fdist<1.5){
             object_ahead  = true;
 			///ROS_INFO("Obstacle ahead");
             ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
@@ -86,7 +86,7 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
             lb_dist = msg-> ranges[i];
             if(lb_dist<30){
             //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
-            if(lb_dist<2){
+            if(lb_dist<1.5){
             object_left = true;
 			///ROS_INFO("Obstacle left");
             ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
@@ -109,7 +109,7 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
             l_dist = msg-> ranges[i];
             if(l_dist<30){
             //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
-            if(l_dist<2){
+            if(l_dist<2.5){
             object_back_left = true;
             //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
 
@@ -325,17 +325,7 @@ int main(int argc, char** argv)
 
 	}
 
-	else{
-		cmd_vel_msg.header.stamp = ros::Time::now();
-    cmd_vel_msg.twist.linear.x = 0.0;  
-    cmd_vel_msg.twist.linear.y = 0.0;  
-    cmd_vel_msg.twist.linear.z = 0.0;  
-    cmd_vel_msg.twist.angular.x = 0.0; 
-    cmd_vel_msg.twist.angular.y = 0.0; 
-    cmd_vel_msg.twist.angular.z = -0.1; 
-    cmd_vel_pub.publish(cmd_vel_msg);
-
-	}
+	
 		}
     if( object_left == false && object_ahead == false && object_back_left == true){
         ROS_INFO("Corner");
