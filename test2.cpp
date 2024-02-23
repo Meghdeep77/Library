@@ -5,6 +5,8 @@
 #include "std_msgs/String.h"
 #include "sensor_msgs/Imu.h"
 #include <geometry_msgs/TwistStamped.h>
+#include <bits/stdc++.h>
+
 
 double ow;
 double ox;
@@ -34,12 +36,15 @@ double fdist;
 double l_dist;
 double lb_dist;
 double last_left;
+double denominator;
+double numerator;
 
 bool object_ahead = false;
 bool object_left = false;
 bool object_right = false;
 bool object_back_left = false;
 bool wall_following = false;
+double dist_to_line(double x0, double y0);
 //include API 
 
 void imuCallback(const sensor_msgs::Imu::ConstPtr& msg) {
@@ -58,9 +63,21 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr& msg) {
    ROS_INFO("Yaw = %f", yawd);
 
    }
+
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     geometry_msgs::Point current_pos = get_current_location();
+    lon = current_pos.x;
+    lat = current_pos.y;
+    if(flag2 == 0){
+    start_lon = current_pos.x;
+    start_lat = current_pos.y;
+    flag2 ++;
+    }
+
 	ROS_INFO("In laser callback");
+    ROS_INFO("Distance to line : %f",dist_to_line(lon,lat));
+    ROS_INFO("Current Coordinates : X : %f Y : %f Z: %f ",current_pos.x,current_pos.y,current_pos.z);
+    ROS_INFO("Starting Coordinates : X : %f Y : %f ",start_lon,start_lat);
 	for(int i = 300; i< 415;i++){
             ;
             obstacle_angle = i/2;
@@ -88,7 +105,7 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
             lb_dist = msg-> ranges[i];
             if(lb_dist<30){
             //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
-            if(lb_dist<1){
+            if(lb_dist<1.5){
             object_left = true;
 			///ROS_INFO("Obstacle left");
             ROS_INFO("Object Left");
@@ -114,7 +131,7 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
             l_dist = msg-> ranges[i];
         
             //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
-            if(l_dist<1.5){
+            if(l_dist<2){
             object_back_left = true;
             ROS_INFO("Corner");
             ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
@@ -133,6 +150,15 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 
 
                }
+    
+
+double dist_to_line(double x0, double y0){
+
+double numerator = fabs((y - start_lat) * x0 - (x - start_lon) * y0 + x * start_lat - y * start_lon);
+double denominator = sqrt(pow(y - start_lat, 2) + pow(x - start_lon, 2));
+return numerator/denominator;
+
+}
 
 
 int main(int argc, char** argv)
@@ -147,8 +173,15 @@ int main(int argc, char** argv)
 	init_publisher_subscriber(gnc_node);
 	ros::Subscriber lasersub = gnc_node.subscribe("/scan", 1000, laserCallback);
 	ros::Subscriber imusub = gnc_node.subscribe("/mavros/imu/data", 1000, imuCallback);
-	ros::Publisher velPub = gnc_node.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
 	ros::Publisher cmd_vel_pub = gnc_node.advertise<geometry_msgs::TwistStamped>("/mavros/setpoint_velocity/cmd_vel", 1);
+     if(flag3 == 0){
+    std::cout<<"Enter Longitude";
+    std::cin>>x;
+    std::cout<<"Enter Lattitude";
+    std::cin>>y;
+    ros::spinOnce();
+    flag3++;
+    }
 
   	// wait for FCU connection
 	wait4connect();
@@ -178,7 +211,7 @@ int main(int argc, char** argv)
 	ROS_INFO("Desired angle = %f",angle);
 	geometry_msgs::TwistStamped cmd_vel_msg;
     cmd_vel_msg.header.stamp = ros::Time::now();
-	if(!object_ahead){
+	if(!object_ahead && object_back_left == false){
         ROS_INFO("Obstacle not ahead");
 	cmd_vel_msg.header.stamp = ros::Time::now();
     cmd_vel_msg.twist.linear.x = 0.5*cos(yaw);  
@@ -190,7 +223,9 @@ int main(int argc, char** argv)
     cmd_vel_pub.publish(cmd_vel_msg);
     ros::spinOnce();
 
-     if( object_left == false && object_ahead == false && object_back_left == true){
+     
+    }
+    if( object_left == false && object_ahead == false && object_back_left == true){
         ROS_INFO("Corner");
         geometry_msgs::TwistStamped cmd_vel_msg;
 	 cmd_vel_msg.header.stamp = ros::Time::now();
@@ -200,9 +235,9 @@ int main(int argc, char** argv)
     cmd_vel_msg.twist.angular.x = 0.0; 
     cmd_vel_msg.twist.angular.y = 0.0; 
     cmd_vel_msg.twist.angular.z = 0.1;
+    cmd_vel_pub.publish(cmd_vel_msg);
     ros::spinOnce();
 
-    }
     }
 	
 	if(object_ahead){
