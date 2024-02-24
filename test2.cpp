@@ -15,7 +15,7 @@ double oz;
 double siny_cosp;
 double cosy_cosp;
 double yaw;
-double yawd = yaw * 180 / 3.1415;
+double yawd;
 double lat;
 double lon;
 double x ;
@@ -57,9 +57,7 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr& msg) {
     yaw = std::atan2(siny_cosp, cosy_cosp);
 
     yawd = yaw * 180 / 3.1415;
-    if(yawd < 0){
-    yawd = 360 + yawd;
-   }
+    
    ROS_INFO("Yaw = %f", yawd);
 
    }
@@ -84,6 +82,7 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
             fdist = msg-> ranges[i];
             if(fdist<1){
             object_ahead  = true;
+            wall_following = true;
 			///ROS_INFO("Obstacle ahead");
             ROS_INFO("Object front");
             ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
@@ -172,7 +171,7 @@ int main(int argc, char** argv)
 
 	init_publisher_subscriber(gnc_node);
 	ros::Subscriber lasersub = gnc_node.subscribe("/scan", 1000, laserCallback);
-	ros::Subscriber imusub = gnc_node.subscribe("/mavros/imu/data", 1000, imuCallback);
+	ros::Subscriber imusub = gnc_node.subscribe("/mavros/imu/data", 1, imuCallback);
 	ros::Publisher cmd_vel_pub = gnc_node.advertise<geometry_msgs::TwistStamped>("/mavros/setpoint_velocity/cmd_vel", 1);
      if(flag3 == 0){
     std::cout<<"Enter Longitude";
@@ -207,10 +206,13 @@ int main(int argc, char** argv)
 		geometry_msgs::Point current_pos = get_current_location();
 	ROS_INFO("X = %f, Y = %f, Z= %f ",current_pos.x,current_pos.y,current_pos.z);
 	ROS_INFO("Current Heading = %f",get_current_heading());
-	angle = atan2(current_pos.y - 0 ,current_pos.x - 3)* 180 / 3.1415;
-	ROS_INFO("Desired angle = %f",angle);
+	ROS_INFO("Dist to point  = %f",dist);
 	geometry_msgs::TwistStamped cmd_vel_msg;
     cmd_vel_msg.header.stamp = ros::Time::now();
+
+
+    if(wall_following == true){
+        ROS_INFO("Wall following");
 	if(!object_ahead && object_back_left == false){
         ROS_INFO("Obstacle not ahead");
 	cmd_vel_msg.header.stamp = ros::Time::now();
@@ -274,7 +276,51 @@ int main(int argc, char** argv)
 
    
 		}
+        else{
+         angle = atan2(y-lat,x -lon)* 180 / 3.1415;
+          if(angle < 0){
+        angle = 360 + angle;}
 
+        ROS_INFO("Desired angle = %f",angle);
+        ROS_INFO("Yaw = %f",yawd);
+
+        if(abs(yawd - angle) < 5 && wall_following == false){
+            geometry_msgs::TwistStamped cmd_vel_msg;
+        cmd_vel_msg.header.stamp = ros::Time::now();
+        cmd_vel_msg.twist.linear.x = 0.5 * cos(yaw);  
+        cmd_vel_msg.twist.linear.y = 0.5 * sin(yaw);  
+        cmd_vel_msg.twist.linear.z = 0.0;  
+        cmd_vel_msg.twist.angular.x = 0.0; 
+        cmd_vel_msg.twist.angular.y = 0.0; 
+        cmd_vel_msg.twist.angular.z = 0.0; 
+        cmd_vel_pub.publish(cmd_vel_msg);
+        ros::spinOnce();}
+
+        else{
+                ROS_INFO("error %f",abs(yawd - angle));
+            geometry_msgs::TwistStamped cmd_vel_msg;
+	cmd_vel_msg.header.stamp = ros::Time::now();	
+    cmd_vel_msg.twist.linear.x = 0.0;  
+    cmd_vel_msg.twist.linear.y = 0.0;  
+    cmd_vel_msg.twist.linear.z = 0.0;  
+    cmd_vel_msg.twist.angular.x = 0.0; 
+    cmd_vel_msg.twist.angular.y = 0.0; 
+    cmd_vel_msg.twist.angular.z = -0.1; 
+    cmd_vel_pub.publish(cmd_vel_msg);
+	ros::spinOnce();
+        }
+
+        }
+
+      }
+      std::cout<<angle;
+      ros::spinOnce();
+        
+
+        
+
+
+    
 
 
 
