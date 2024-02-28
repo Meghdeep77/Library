@@ -74,6 +74,7 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     start_lon = current_pos.x;
     start_lat = current_pos.y;
     flag2 ++;
+    sdist = 0;
     }
 
 
@@ -328,7 +329,7 @@ int main(int argc, char** argv)
         cmd_vel_pub.publish(cmd_vel_msg);
         ros::spinOnce();}
 
-        else if(dist > 1 && sdist < 0.2 && wall_following == false){
+        else if(dist > 1 && sdist < 2 && wall_following == false && abs(yawd - angle) >= 5){
                 ROS_INFO("error %f",abs(yawd - angle));
             geometry_msgs::TwistStamped cmd_vel_msg;
 	cmd_vel_msg.header.stamp = ros::Time::now();	
@@ -341,7 +342,7 @@ int main(int argc, char** argv)
     cmd_vel_pub.publish(cmd_vel_msg);
 	ros::spinOnce();}
         else{
-            if(abs(yawd - angle) >= 5 && sdist > 0.000030 && wall_following == false){
+            if(abs(yawd - angle) >= 5 && sdist > 3 && wall_following == false){
                 ROS_INFO("Correcting");
                 if(yawd>angle){
                 
