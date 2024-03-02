@@ -40,6 +40,7 @@ double denominator;
 double numerator;
 double raw_yaw;
 double temp;
+double raw_angle;
 
 bool object_ahead = false;
 bool object_left = false;
@@ -113,7 +114,7 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
             
             obstacle_angle = i/2;
             lb_dist = msg-> ranges[i];
-            if(lb_dist<30){
+            
             //ROS_INFO("angle = %d, distance = %f",obstacle_angle,msg->ranges[i]);
             if(lb_dist<1.5){
             object_left = true;
@@ -131,7 +132,7 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
            }
 
 
-               }
+            
 
                }
 
@@ -291,6 +292,7 @@ int main(int argc, char** argv)
 		}
         else{
          angle = atan2(y-lat,x -lon)* 180 / 3.1415;
+         raw_angle = angle;
           if(angle < 0){
         angle = 360 + angle;}
         ROS_INFO("Going to point");
