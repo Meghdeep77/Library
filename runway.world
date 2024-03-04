@@ -50,21 +50,22 @@
           </surface>
         </collision>
         <visual name="runway">
-          <pose>000 0 0.005 0 0 0</pose>
-          <cast_shadows>false</cast_shadows>
-          <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-              <size>1829 45</size>
-            </plane>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Runway</name>
-            </script>
-          </material>
-        </visual>
+    <pose>0 0 0.005 0 0 0</pose>
+    <cast_shadows>false</cast_shadows>
+    <geometry>
+        <plane>
+            <normal>0 0 1</normal>
+            <size>1829 45</size>
+        </plane>
+    </geometry>
+    <material>
+        <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Green</name> <!-- You need to define a material with this name -->
+        </script>
+    </material>
+</visual>
+
 
         <visual name="grass">
           <pose>0 0 -0.1 0 0 0</pose>
@@ -107,7 +108,7 @@
       </inertial>
             
             <visual name="visual">
-                <pose>0 0 0.15 0 0 0</pose>
+                <pose>0 0 0.35 0 0 0</pose>
                 <geometry>
                     <box>
                         <size>0.02 0.02 0.02</size> 
@@ -116,17 +117,17 @@
             </visual>
           
             <sensor type="ray" name="tf02_lidar_sensor">
-                    <pose>0 0 0.15 0 0 0</pose>
+                    <pose>0 0 0.35 0 0 0</pose>
                     <visualize>true</visualize>
                     <update_rate>10</update_rate>
                     <ray>
                         <scan>
                             <horizontal>
-                                <samples>1</samples>
-                                <resolution>1</resolution>
-                                <min_angle>0</min_angle>
-                                <max_angle>0</max_angle>
-                            </horizontal>
+            <samples>720</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14</min_angle>
+            <max_angle>3.14</max_angle>
+          </horizontal>
                         </scan>
                         <range>
                             <min>0.1</min>
@@ -155,7 +156,7 @@
 
         <!-- Joint to attach the Lidar to the robot -->
         <joint name="tf02_lidar_joint" type="fixed">
-            <pose>0 0 0.15 0 0 0</pose>
+            <pose>0 0 0.30 0 0 0</pose>
             <parent>iris::drone_with_camera::iris::base_link</parent>
             <child>tf02_lidar_link</child>
             <axis>
