@@ -41,6 +41,8 @@ double numerator;
 double raw_yaw;
 double temp;
 double raw_angle;
+int delta_cw;
+int delta_ccw;
 
 bool object_ahead = false;
 bool object_left = false;
@@ -295,6 +297,8 @@ int main(int argc, char** argv)
          raw_angle = angle;
           if(angle < 0){
         angle = 360 + angle;}
+        delta_cw = (int(angle) - int(yawd) + 360) % 360;
+        delta_ccw = (int(yawd) - int(angle) + 360) % 360;
         ROS_INFO("Going to point");
         ROS_INFO("Desired angle = %f",angle);
         ROS_INFO("Yaw = %f",yawd);
@@ -328,8 +332,9 @@ int main(int argc, char** argv)
         else if(dist > 1 && sdist < 2 && wall_following == false && abs(yawd - angle) >= 5){
                 ROS_INFO("error %f",abs(yawd - angle));
             geometry_msgs::TwistStamped cmd_vel_msg;
-        if(angle - raw_yaw < 0){
-            cmd_vel_msg.header.stamp = ros::Time::now();	
+        if(delta_cw > delta_ccw){
+            cmd_vel_msg.header.stamp = ros::Time::now();
+            ROS_INFO("angle: %f yaw: %f",angle,raw_yaw);	
     cmd_vel_msg.twist.linear.x = 0.0;  
     cmd_vel_msg.twist.linear.y = 0.0;  
     cmd_vel_msg.twist.linear.z = 0.0;  
@@ -340,6 +345,7 @@ int main(int argc, char** argv)
 	ros::spinOnce();}
 
     else{
+         ROS_INFO("angle: %f yaw: %f",angle,raw_yaw);	
         cmd_vel_msg.header.stamp = ros::Time::now();	
     cmd_vel_msg.twist.linear.x = 0.0;  
     cmd_vel_msg.twist.linear.y = 0.0;  
@@ -356,9 +362,9 @@ int main(int argc, char** argv)
 
 	}
         else{
-            if(abs(yawd - angle) >= 5 && sdist > 3 && wall_following == false){
+            if(abs(yawd - angle) >= 5 && sdist > 2 && wall_following == false){
                 ROS_INFO("Correcting");
-                if(yawd>angle){
+                if(delta_cw > delta_ccw){
                 
                 geometry_msgs::TwistStamped cmd_vel_msg;
         cmd_vel_msg.header.stamp = ros::Time::now();
@@ -372,7 +378,8 @@ int main(int argc, char** argv)
         ros::spinOnce();
                 }
 
-                else if(yawd < angle ){
+                else{
+                    ROS_INFO("Correcting");
 
           geometry_msgs::TwistStamped cmd_vel_msg;
         cmd_vel_msg.header.stamp = ros::Time::now();
@@ -385,6 +392,22 @@ int main(int argc, char** argv)
         cmd_vel_pub.publish(cmd_vel_msg);
         ros::spinOnce();
           }
+            }
+            else{
+                ROS_INFO("Unknown Case going straight");
+
+          geometry_msgs::TwistStamped cmd_vel_msg;
+        cmd_vel_msg.header.stamp = ros::Time::now();
+        cmd_vel_msg.twist.linear.x = 0.5 * cos(yaw);  
+        cmd_vel_msg.twist.linear.y = 0.5 * sin(yaw);  
+        cmd_vel_msg.twist.linear.z = 0.0;  
+        cmd_vel_msg.twist.angular.x = 0.0; 
+        cmd_vel_msg.twist.angular.y = 0.0; 
+        cmd_vel_msg.twist.angular.z = 0.0; 
+        cmd_vel_pub.publish(cmd_vel_msg);
+        ros::spinOnce();
+
+
             }
 
         }
