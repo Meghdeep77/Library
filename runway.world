@@ -61,7 +61,7 @@
     <material>
         <script>
             <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Green</name> <!-- You need to define a material with this name -->
+            <name>Gazebo/Runway</name> <!-- You need to define a material with this name -->
         </script>
     </material>
 </visual>
